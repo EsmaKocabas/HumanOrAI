@@ -1,0 +1,33 @@
+# Veri dosyaları - GitHub'a yüklenmemeli (çok büyük)
+data/raw/*.csv
+data/raw/*.json
+data/raw/*.xlsx
+
+# Environment variables - API key'leri içerir
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Logs
+*.log
