@@ -14,5 +14,13 @@ exports.getPrediction = async (text) => {
       human_score: Math.min(90, 50 + (length % 10)),
       ai_score: Math.min(90, 50 + (length % 10)),
     },
+    model_4: {
+      human_score: Math.min(90, 50 + (length % 10)),
+      ai_score: Math.min(90, 50 + (length % 10)),
+    },
+    model_5: {
+      human_score: Math.min(90, 50 + (length % 10)),
+      ai_score: Math.min(90, 50 + (length % 10)),
+    },
   };
 };

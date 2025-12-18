@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, Zap, Cpu, Activity, Clock, BarChart3, FileText } from "lucide-react";
+import { Sparkles, Cpu, Activity, FileText } from "lucide-react";
 import { analysisService } from "../services/AnalysisService";
 import { AnalysisResult } from "../types/Analysis";
 import { ModelResultCard } from "./ModelResultCard";
@@ -25,6 +25,8 @@ export function TextAnalyzer() {
 
     try {
       const analysisResult = await analysisService.analyzeText(text);
+      console.log('Analysis result:', analysisResult);
+      console.log('Number of predictions:', analysisResult.predictions.length);
       setResult(analysisResult);
     } catch (err) {
       setError("Analiz sırasında bir hata oluştu. Lütfen tekrar deneyin.");
@@ -57,8 +59,7 @@ export function TextAnalyzer() {
           className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border-2 border-teal-200 shadow-sm mb-6"
         >
           <Sparkles className="w-4 h-4 text-teal-600" />
-          <span className="text-sm text-teal-700">Yapay Zeka Destekli Metin Analizi</span>
-          <Zap className="w-4 h-4 text-cyan-600" />
+          <span className="text-sm text-teal-700">AIorHuman Text Detector</span>
         </motion.div>
         
         <motion.h1
@@ -67,15 +68,15 @@ export function TextAnalyzer() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="text-6xl mb-4 bg-gradient-to-r from-teal-600 via-cyan-600 to-sky-600 bg-clip-text text-transparent"
         >
-          AI / İnsan Metin Tespit
+          AI / İnsan Metin Tespiti
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-xl text-slate-600 max-w-3xl mx-auto"
+          className="text-medium text-slate-600 max-w-3xl mx-auto"
         >
-          Metninizi 3 farklı yapay zeka modeli ile analiz edin ve kaynağını tespit edin
+          Metninizi 5 farklı yapay zeka modeliyle analiz edin ve kim tarafından yazıldığını tespit edin.
         </motion.p>
       </motion.div>
 
@@ -115,7 +116,7 @@ export function TextAnalyzer() {
         
         <div className="flex items-center justify-between mt-6">
           <div className="flex items-center gap-3">
-            {text.length >= 10 && (
+            {text.length >= 10 && !result && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -123,6 +124,16 @@ export function TextAnalyzer() {
               >
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                 <span className="text-sm text-emerald-700">Analiz için hazır</span>
+              </motion.div>
+            )}
+            {result && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-2 px-3 py-2 bg-teal-50 border border-teal-200 rounded-lg"
+              >
+                <div className="w-2 h-2 bg-teal-500 rounded-full" />
+                <span className="text-sm text-teal-700">Analiz edildi</span>
               </motion.div>
             )}
           </div>
@@ -137,7 +148,7 @@ export function TextAnalyzer() {
             </button>
             <motion.button
               onClick={handleAnalyze}
-              disabled={isAnalyzing || text.length < 10}
+              disabled={isAnalyzing || text.length < 10 || result !== null}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="px-10 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white rounded-xl shadow-lg shadow-teal-200 hover:shadow-teal-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
@@ -185,10 +196,10 @@ export function TextAnalyzer() {
               <div className="absolute inset-2 w-16 h-16 border-4 border-transparent border-t-cyan-500 rounded-full animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }} />
             </div>
             <h3 className="text-3xl mb-3 text-slate-800">Modeller Çalışıyor</h3>
-            <p className="text-lg text-slate-600 mb-8">3 yapay zeka modeli metninizi analiz ediyor...</p>
+            <p className="text-lg text-slate-600 mb-8">5 yapay zeka modeli metninizi analiz ediyor...</p>
             
-            <div className="flex justify-center gap-4">
-              {['GPT-Detector', 'LSTM-Analyzer', 'BERT-Checker'].map((model, i) => (
+            <div className="flex justify-center gap-4 flex-wrap">
+              {['GPT-Detector', 'LSTM-Analyzer', 'BERT-Checker', 'Model-4', 'Model-5'].map((model, i) => (
                 <motion.div
                   key={model}
                   initial={{ opacity: 0, y: 20 }}
@@ -216,7 +227,7 @@ export function TextAnalyzer() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10"
+              className="grid grid-cols-2 gap-5 mb-10"
             >
               <StatsCard
                 icon={Activity}
@@ -231,20 +242,6 @@ export function TextAnalyzer() {
                 value={`${result.averageHumanProbability.toFixed(1)}%`}
                 color="from-emerald-400 to-green-500"
                 delay={0.2}
-              />
-              <StatsCard
-                icon={BarChart3}
-                label="Ortalama Güven"
-                value={`${(result.predictions.reduce((acc, p) => acc + p.confidence, 0) / result.predictions.length).toFixed(1)}%`}
-                color="from-teal-400 to-cyan-500"
-                delay={0.25}
-              />
-              <StatsCard
-                icon={Clock}
-                label="İşlem Süresi"
-                value={`${result.predictions.reduce((acc, p) => acc + p.processingTime, 0).toFixed(0)}ms`}
-                color="from-sky-400 to-blue-500"
-                delay={0.3}
               />
             </motion.div>
 
@@ -264,14 +261,29 @@ export function TextAnalyzer() {
                 <h2 className="text-4xl text-slate-800">Model Tahminleri</h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {result.predictions.map((prediction, index) => (
-                  <ModelResultCard
-                    key={prediction.modelName}
-                    prediction={prediction}
-                    delay={0.5 + index * 0.1}
-                  />
-                ))}
+              <div className="space-y-10">
+                {/* İlk 3 model - üst satır */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  {result.predictions.slice(0, 3).map((prediction, index) => (
+                    <ModelResultCard
+                      key={prediction.modelName}
+                      prediction={prediction}
+                      delay={0.5 + index * 0.1}
+                    />
+                  ))}
+                </div>
+                {/* Son 2 model - alt satır, soldan başlayarak */}
+                {result.predictions.length > 3 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {result.predictions.slice(3, 5).map((prediction, index) => (
+                      <ModelResultCard
+                        key={prediction.modelName}
+                        prediction={prediction}
+                        delay={0.8 + index * 0.1}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>

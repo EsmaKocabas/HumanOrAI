@@ -36,6 +36,22 @@ exports.predictText = async (req, res) => {
         confidence: 88,
         processingTime: 390,
       },
+      {
+        modelName: 'Model-4',
+        modelType: 'Neural Network Classifier',
+        aiProbability: rawPrediction.model_4.ai_score,
+        humanProbability: rawPrediction.model_4.human_score,
+        confidence: 83,
+        processingTime: 350,
+      },
+      {
+        modelName: 'Model-5',
+        modelType: 'Transformer-Based Analyzer',
+        aiProbability: rawPrediction.model_5.ai_score,
+        humanProbability: rawPrediction.model_5.human_score,
+        confidence: 86,
+        processingTime: 380,
+      },
     ];
 
     const avgAi =

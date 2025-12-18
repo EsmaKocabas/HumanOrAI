@@ -15,9 +15,9 @@ class AnalysisService {
     return AnalysisService.instance
   }
 
-  // Frontend → Backend API çağrısı
+    // Frontend → Backend API çağrısı
   public async analyzeText(text: string): Promise<AnalysisResult> {
-    if (!text || !text.trim()) {
+    if (!text?.trim()) {
       throw new Error('Text cannot be empty')
     }
 
