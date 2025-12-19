@@ -1,14 +1,25 @@
 import { motion } from "motion/react";
-import { AnalysisResult } from "../types/Analysis";
-import { Shield, CheckCircle2, XCircle } from "lucide-react";
+import { Shield, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 
-interface FinalVerdictCardProps {
-  result: AnalysisResult;
-}
+export function FinalVerdictCard({ result }: { result: any }) {
+  // --- GÜVENLİK KONTROLÜ ---
+  if (!result) return null;
 
-export function FinalVerdictCard({ result }: FinalVerdictCardProps) {
+  // Sonucu al (Human/AI)
+  const rawVerdict = result.finalVerdict || result.result || "AI";
+  const normalizedVerdict = rawVerdict.toString().toUpperCase() === "HUMAN" ? "HUMAN" : "AI";
+
+  // --- DÜZELTME BURADA ---
+  // Eskiden: Veri yoksa %95 uyduruyorduk.
+  // Şimdi: Veri yoksa direkt 0 basıyoruz.
+  const aiProb = result.averageAiProbability || 0;
+  const humanProb = result.averageHumanProbability || 0;
+  
+  const predictions = result.predictions || [];
+
+  // --- TASARIM AYARLARI ---
   const getVerdictConfig = () => {
-    switch (result.finalVerdict) {
+    switch (normalizedVerdict) {
       case 'AI':
         return {
           icon: XCircle,
@@ -30,6 +41,17 @@ export function FinalVerdictCard({ result }: FinalVerdictCardProps) {
           borderColor: 'border-emerald-300',
           iconColor: 'text-emerald-600',
           iconBg: 'from-emerald-500 to-green-500'
+        };
+      default:
+        return {
+          icon: AlertTriangle,
+          title: 'Analiz Tamamlandı',
+          subtitle: 'Sonuç Belirlendi',
+          description: 'Metin analizi tamamlandı.',
+          bgGradient: 'from-slate-50 to-gray-50',
+          borderColor: 'border-slate-300',
+          iconColor: 'text-slate-600',
+          iconBg: 'from-slate-500 to-gray-500'
         };
     }
   };
@@ -87,7 +109,7 @@ export function FinalVerdictCard({ result }: FinalVerdictCardProps) {
         </div>
       </div>
 
-      {/* Percentage Breakdown */}
+      {/* Yüzde Göstergeleri */}
       <div className="grid grid-cols-2 gap-6 mb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -100,12 +122,12 @@ export function FinalVerdictCard({ result }: FinalVerdictCardProps) {
             <div className="text-sm text-slate-600">AI Olasılığı</div>
           </div>
           <div className="text-5xl text-red-600 mb-3">
-            {result.averageAiProbability.toFixed(1)}%
+            {aiProb.toFixed(1)}%
           </div>
           <div className="h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${result.averageAiProbability}%` }}
+              animate={{ width: `${aiProb}%` }}
               transition={{ duration: 1, delay: 1 }}
               className="h-full bg-gradient-to-r from-red-400 to-rose-500 rounded-full"
             />
@@ -123,12 +145,12 @@ export function FinalVerdictCard({ result }: FinalVerdictCardProps) {
             <div className="text-sm text-slate-600">İnsan Olasılığı</div>
           </div>
           <div className="text-5xl text-emerald-600 mb-3">
-            {result.averageHumanProbability.toFixed(1)}%
+            {humanProb.toFixed(1)}%
           </div>
           <div className="h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${result.averageHumanProbability}%` }}
+              animate={{ width: `${humanProb}%` }}
               transition={{ duration: 1, delay: 1.1 }}
               className="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full"
             />
@@ -136,51 +158,59 @@ export function FinalVerdictCard({ result }: FinalVerdictCardProps) {
         </motion.div>
       </div>
 
-      {/* Model Consensus */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2 }}
-        className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-teal-200"
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Shield className="w-5 h-5 text-teal-600" />
-          <span className="text-sm text-slate-700">Model Uzlaşması</span>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {result.predictions.map((pred, index) => {
-            const modelAgrees = result.finalVerdict === 'AI' 
-              ? pred.aiProbability > pred.humanProbability
-              : result.finalVerdict === 'HUMAN'
-              ? pred.humanProbability > pred.aiProbability
-              : Math.abs(pred.aiProbability - pred.humanProbability) < 15;
+      {/* Detaylı Modeller */}
+      {predictions.length > 0 && (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2 }}
+            className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-teal-200"
+        >
+            <div className="flex items-center gap-2 mb-4">
+            <Shield className="w-5 h-5 text-teal-600" />
+            <span className="text-sm text-slate-700">Model Uzlaşması</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {predictions.map((pred: any, index: number) => {
+                // BURADA DA UYDURMAYI KALDIRDIK
+                const pAi = pred.aiProbability || 0;
+                const pHuman = pred.humanProbability || 0;
+                
+                // Uyum kontrolü
+                let modelAgrees = false;
+                if (normalizedVerdict === 'AI') {
+                    modelAgrees = pAi > pHuman;
+                } else {
+                    modelAgrees = pHuman > pAi;
+                }
 
-            return (
-              <motion.div
-                key={pred.modelName}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.3 + index * 0.1 }}
-                className={`px-4 py-3 rounded-xl text-center border-2 ${
-                  modelAgrees
-                    ? 'bg-teal-50 border-teal-300'
-                    : 'bg-white/50 border-slate-200'
-                }`}
-              >
-                <div className="text-sm text-slate-700 mb-1">{pred.modelName}</div>
-                {modelAgrees ? (
-                  <div className="text-xs text-teal-600 flex items-center justify-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Uyumlu
-                  </div>
-                ) : (
-                  <div className="text-xs text-slate-500">Farklı</div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-      </motion.div>
+                return (
+                <motion.div
+                    key={pred.modelName || index}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.3 + index * 0.1 }}
+                    className={`px-4 py-3 rounded-xl text-center border-2 ${
+                    modelAgrees
+                        ? 'bg-teal-50 border-teal-300'
+                        : 'bg-white/50 border-slate-200'
+                    }`}
+                >
+                    <div className="text-sm text-slate-700 mb-1">{pred.modelName || "Model"}</div>
+                    {modelAgrees ? (
+                    <div className="text-xs text-teal-600 flex items-center justify-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Uyumlu
+                    </div>
+                    ) : (
+                    <div className="text-xs text-slate-500">Farklı Görüş</div>
+                    )}
+                </motion.div>
+                );
+            })}
+            </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
