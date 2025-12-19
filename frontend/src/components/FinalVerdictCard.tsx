@@ -156,61 +156,7 @@ export function FinalVerdictCard({ result }: { result: any }) {
             />
           </div>
         </motion.div>
-      </div>
-
-      {/* Detaylı Modeller */}
-      {predictions.length > 0 && (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2 }}
-            className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-teal-200"
-        >
-            <div className="flex items-center gap-2 mb-4">
-            <Shield className="w-5 h-5 text-teal-600" />
-            <span className="text-sm text-slate-700">Model Uzlaşması</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {predictions.map((pred: any, index: number) => {
-                // BURADA DA UYDURMAYI KALDIRDIK
-                const pAi = pred.aiProbability || 0;
-                const pHuman = pred.humanProbability || 0;
-                
-                // Uyum kontrolü
-                let modelAgrees = false;
-                if (normalizedVerdict === 'AI') {
-                    modelAgrees = pAi > pHuman;
-                } else {
-                    modelAgrees = pHuman > pAi;
-                }
-
-                return (
-                <motion.div
-                    key={pred.modelName || index}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.3 + index * 0.1 }}
-                    className={`px-4 py-3 rounded-xl text-center border-2 ${
-                    modelAgrees
-                        ? 'bg-teal-50 border-teal-300'
-                        : 'bg-white/50 border-slate-200'
-                    }`}
-                >
-                    <div className="text-sm text-slate-700 mb-1">{pred.modelName || "Model"}</div>
-                    {modelAgrees ? (
-                    <div className="text-xs text-teal-600 flex items-center justify-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Uyumlu
-                    </div>
-                    ) : (
-                    <div className="text-xs text-slate-500">Farklı Görüş</div>
-                    )}
-                </motion.div>
-                );
-            })}
-            </div>
-        </motion.div>
-      )}
+      </div>   
     </motion.div>
   );
 }

@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Cpu, TrendingUp, Clock, AlertCircle } from "lucide-react";
+import { Cpu } from "lucide-react";
 
 // --- TİP TANIMLAMALARI ---
 // Gelen verinin neye benzediğini tanımlıyoruz
@@ -26,7 +26,6 @@ export function ModelResultCard({ prediction, delay }: ModelResultCardProps) {
   const modelName = safePred.modelName || "Bilinmeyen Model";
   const modelType = safePred.modelType || "Yapay Zeka Modeli";
   const confidence = safePred.confidence || 0;
-  const processingTime = safePred.processingTime || 0;
   const resultType = safePred.result || "AI"; // "Human" veya "AI"
 
   // 3. İhtimalleri Hesapla (Backend'den gelmese bile biz üretelim)
@@ -41,9 +40,6 @@ export function ModelResultCard({ prediction, delay }: ModelResultCardProps) {
     aiProbability = confidence;
     humanProbability = 100 - confidence;
   }
-
-  // Hangisi daha baskın? (Renkleri buna göre ayarlayacağız)
-  const isAiDominant = aiProbability > humanProbability;
 
   return (
     <motion.div
@@ -67,30 +63,6 @@ export function ModelResultCard({ prediction, delay }: ModelResultCardProps) {
             </div>
           </div>
         </div>
-
-        {/* --- GENEL GÜVEN SKORU --- */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-teal-600" />
-              <span className="text-xs font-semibold text-slate-600">Model Güveni</span>
-            </div>
-            {/* Progress Bar Arkaplanı */}
-            <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden border border-slate-300/50">
-              {/* Hareketli Bar */}
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${confidence}%` }}
-                transition={{ duration: 1, delay: delay + 0.2 }}
-                className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full shadow-[0_0_10px_rgba(20,184,166,0.3)]"
-              />
-            </div>
-          </div>
-          {/* Yüzde Rozeti */}
-          <div className="px-3 py-1.5 bg-white border-2 border-teal-200 rounded-lg shadow-sm">
-            <span className="text-sm font-bold text-teal-700">%{confidence.toFixed(1)}</span>
-          </div>
-        </div>
       </div>
 
       {/* --- DETAYLI TAHMİNLER (AI vs HUMAN) --- */}
@@ -100,10 +72,10 @@ export function ModelResultCard({ prediction, delay }: ModelResultCardProps) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className={`w-2.5 h-2.5 rounded-full ${isAiDominant ? 'bg-red-500 animate-pulse' : 'bg-slate-300'}`} />
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
               <span className="text-sm font-medium text-slate-700">AI Olasılığı</span>
             </div>
-            <span className={`text-lg font-bold ${isAiDominant ? 'text-red-600' : 'text-slate-400'}`}>
+            <span className="text-lg font-bold text-red-600">
               %{aiProbability.toFixed(1)}
             </span>
           </div>
@@ -112,7 +84,7 @@ export function ModelResultCard({ prediction, delay }: ModelResultCardProps) {
               initial={{ width: 0 }}
               animate={{ width: `${aiProbability}%` }}
               transition={{ duration: 1, delay: delay + 0.3 }}
-              className={`h-full rounded-full ${isAiDominant ? 'bg-gradient-to-r from-red-400 to-rose-600' : 'bg-slate-300'}`}
+              className="h-full rounded-full bg-red-500"
             />
           </div>
         </div>
@@ -121,10 +93,10 @@ export function ModelResultCard({ prediction, delay }: ModelResultCardProps) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className={`w-2.5 h-2.5 rounded-full ${!isAiDominant ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-sm font-medium text-slate-700">İnsan Olasılığı</span>
             </div>
-            <span className={`text-lg font-bold ${!isAiDominant ? 'text-emerald-600' : 'text-slate-400'}`}>
+            <span className="text-lg font-bold text-emerald-600">
               %{humanProbability.toFixed(1)}
             </span>
           </div>
@@ -133,19 +105,8 @@ export function ModelResultCard({ prediction, delay }: ModelResultCardProps) {
               initial={{ width: 0 }}
               animate={{ width: `${humanProbability}%` }}
               transition={{ duration: 1, delay: delay + 0.4 }}
-              className={`h-full rounded-full ${!isAiDominant ? 'bg-gradient-to-r from-emerald-400 to-green-600' : 'bg-slate-300'}`}
+              className="h-full rounded-full bg-emerald-500"
             />
-          </div>
-        </div>
-
-        {/* --- FOOTER: İşlem Süresi --- */}
-        <div className="pt-4 border-t-2 border-teal-50 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-slate-500">
-            <Clock className="w-3.5 h-3.5" />
-            <span className="text-xs font-medium">Analiz Süresi</span>
-          </div>
-          <div className="px-3 py-1 bg-teal-50 border border-teal-200 rounded-full">
-            <span className="text-xs font-mono font-semibold text-teal-700">{processingTime.toFixed(0)}ms</span>
           </div>
         </div>
       </div>

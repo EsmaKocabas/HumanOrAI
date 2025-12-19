@@ -44,7 +44,7 @@ export function TextAnalyzer() {
           predictions: [
             { 
               modelName: 'Logistic Regression', 
-              confidence: baseConfidence + Math.random() * 5, 
+              // confidence: baseConfidence + Math.random() * 5, 
               result: isHuman ? 'Human' : 'AI', 
               processingTime: 45 
             },
@@ -108,7 +108,7 @@ export function TextAnalyzer() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="text-6xl mb-4 bg-gradient-to-r from-teal-600 via-cyan-600 to-sky-600 bg-clip-text text-transparent"
         >
-          AI / İnsan Metin Tespit
+          AI / İnsan Metin Tespiti
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
@@ -255,7 +255,7 @@ export function TextAnalyzer() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10"
+              className="grid grid-cols-2 gap-6 mb-10"
             >
               <StatsCard
                 icon={Activity}
@@ -270,20 +270,6 @@ export function TextAnalyzer() {
                 value={`${(result.averageHumanProbability || 0).toFixed(1)}%`}
                 color="from-emerald-400 to-green-500"
                 delay={0.2}
-              />
-              <StatsCard
-                icon={BarChart3}
-                label="Ortalama Güven"
-                value={`${((result.predictions || []).reduce((acc: any, p: any) => acc + p.confidence, 0) / (result.predictions?.length || 1)).toFixed(1)}%`}
-                color="from-teal-400 to-cyan-500"
-                delay={0.25}
-              />
-              <StatsCard
-                icon={Clock}
-                label="İşlem Süresi"
-                value={`${(result.predictions || []).reduce((acc: any, p: any) => acc + p.processingTime, 0).toFixed(0)}ms`}
-                color="from-sky-400 to-blue-500"
-                delay={0.3}
               />
             </motion.div>
 

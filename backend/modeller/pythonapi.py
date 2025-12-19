@@ -29,6 +29,11 @@ models = {
     "Random Forest": load_model("model_random_forest.pkl") 
 }
 
+# Debug: Modellerin yüklenme durumunu kontrol et
+print(f"🔍 Vectorizer yüklendi: {vectorizer is not None}")
+for name, model in models.items():
+    print(f"🔍 {name} yüklendi: {model is not None}")
+
 @app.route('/predict', methods=['POST'])
 def predict():
 
