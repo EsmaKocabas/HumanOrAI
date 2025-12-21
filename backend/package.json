@@ -8,7 +8,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "jest"
+    "test": "jest",
+    "test:whitebox": "jest tests/predictController.test.js",
+    "test:whitebox:watch": "jest tests/predictController.test.js --watch"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
+    "selenium-webdriver": "^4.39.0",
     "supertest": "^7.1.4"
   }
 }
