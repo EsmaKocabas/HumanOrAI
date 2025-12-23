@@ -71,3 +71,6 @@ htmlcov/
 *.temp
 *.cache
 .cache/
+# SonarQube
+.scannerwork/
+.sonar/
