@@ -1,6 +1,8 @@
 import pandas as pd
 import joblib
 import os
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer

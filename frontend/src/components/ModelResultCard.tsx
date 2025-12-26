@@ -9,6 +9,8 @@ interface Prediction {
   result: string;
   processingTime?: number;
   modelType?: string;
+  aiProbability?: number;
+  humanProbability?: number;
 }
 
 interface ModelResultCardProps {
@@ -28,17 +30,19 @@ export function ModelResultCard({ prediction, delay }: ModelResultCardProps) {
   const confidence = safePred.confidence || 0;
   const resultType = safePred.result || "AI"; // "Human" veya "AI"
 
-  // 3. İhtimalleri Hesapla (Backend'den gelmese bile biz üretelim)
-  // Eğer sonuç "Human" ise insan puanı yüksektir, değilse AI puanı yüksektir.
-  let aiProbability = 0;
-  let humanProbability = 0;
+  // 3. İhtimalleri Hesapla (Backend'den gelirse direkt kullan, yoksa confidence'dan hesapla)
+  let aiProbability = safePred.aiProbability;
+  let humanProbability = safePred.humanProbability;
 
-  if (resultType === "Human") {
-    humanProbability = confidence;
-    aiProbability = 100 - confidence;
-  } else {
-    aiProbability = confidence;
-    humanProbability = 100 - confidence;
+  // Eğer backend'den gelmediyse confidence'dan hesapla
+  if (aiProbability === undefined || humanProbability === undefined) {
+    if (resultType === "Human") {
+      humanProbability = confidence;
+      aiProbability = 100 - confidence;
+    } else {
+      aiProbability = confidence;
+      humanProbability = 100 - confidence;
+    }
   }
 
   return (

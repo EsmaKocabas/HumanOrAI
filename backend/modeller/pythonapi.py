@@ -73,10 +73,21 @@ def predict():
                 try:
                     probabilities = model.predict_proba(vectors)[0]
                     
-                 
-                    # 0. İndeks = AI, 1. İndeks = Human
-                    prob_ai = probabilities[0] * 100
-                    prob_human = probabilities[1] * 100
+                    # Model'in class sırasını kontrol et
+                    # model.classes_[0] = ilk class, model.classes_[1] = ikinci class
+                    # Genelde alfabetik sırada: ['AI', 'Human']
+                    ai_index = list(model.classes_).index('AI') if 'AI' in model.classes_ else 0
+                    human_index = list(model.classes_).index('Human') if 'Human' in model.classes_ else 1
+                    
+                    prob_ai = probabilities[ai_index] * 100
+                    prob_human = probabilities[human_index] * 100
+                    
+                    # Debug: İlk tahminde class sırasını yazdır
+                    if valid_models == 0:
+                        print(f"🔍 {name} - Model classes: {model.classes_}")
+                        print(f"🔍 {name} - AI index: {ai_index}, Human index: {human_index}")
+                        print(f"🔍 {name} - Probabilities: {probabilities}")
+                        print(f"🔍 {name} - AI prob: {prob_ai:.2f}%, Human prob: {prob_human:.2f}%")
                     
                     prediction_label = "AI" if prob_ai > prob_human else "Human"
                     confidence = max(prob_ai, prob_human)
