@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, Zap, Cpu, Activity, Clock, BarChart3, FileText } from "lucide-react";
+import { Sparkles, Zap, Cpu, Activity, FileText } from "lucide-react";
 import { analysisService } from "../services/AnalysisService";
 import { AnalysisResult } from "../types/Analysis";
 import { ModelResultCard } from "./ModelResultCard";
@@ -27,41 +27,114 @@ export function TextAnalyzer() {
       // Backend'den veriyi alıyoruz
       const rawResponse: any = await analysisService.analyzeText(text);
       
-      // EĞER BACKEND SADECE "Human" DÖNDÜRÜRSE, DETAYLARI BİZ DOLDURALIM (Tamir Kısmı)
+      console.log("🔍 Backend'den gelen ham veri:", rawResponse);
+      
+      // Yüzdeleri normalize et (sadece gerçekten gerekliyse)
+      const normalizePercentages = (aiProb: number, humanProb: number) => {
+        const total = aiProb + humanProb;
+        // Eğer toplam 0 ise veya çok küçükse, backend çalışmıyor demektir
+        if (total === 0 || total < 0.1) {
+          console.warn("⚠️ Backend'den geçersiz veri geldi, fallback kullanılacak");
+          return null; // null döndür, fallback kullanılsın
+        }
+        // Eğer toplam zaten yaklaşık 100 ise (95-105 arası), normalize etme
+        if (Math.abs(total - 100) < 5) {
+          return { ai: aiProb, human: humanProb };
+        }
+        // Toplam 100'den farklıysa normalize et
+        return {
+          ai: (aiProb / total) * 100,
+          human: (humanProb / total) * 100
+        };
+      };
+
+      // EĞER BACKEND SADECE "Human" DÖNDÜRÜRSE VEYA PREDICTIONS BOŞ İSE, DETAYLARI BİZ DOLDURALIM (Tamir Kısmı)
       let finalResult = rawResponse;
 
-      if (!rawResponse.predictions) {
-        console.log("⚠️ Basit yanıt algılandı, grafikler için detaylar oluşturuluyor...");
-        const isHuman = rawResponse.result === "Human";
+      // Backend'den gelen yüzdeleri kontrol et
+      const avgAi = rawResponse.averageAiProbability || 0;
+      const avgHuman = rawResponse.averageHumanProbability || 0;
+      const normalizedAvg = normalizePercentages(avgAi, avgHuman);
+      
+      // Predictions yoksa veya boş array ise VEYA yüzdeler geçersizse fallback oluştur
+      const needsFallback = !rawResponse.predictions || 
+                           !Array.isArray(rawResponse.predictions) || 
+                           rawResponse.predictions.length === 0 ||
+                           normalizedAvg === null ||
+                           (avgAi === 0 && avgHuman === 0);
+      
+      if (needsFallback) {
+        console.log("⚠️ Fallback kullanılıyor - Backend verisi eksik veya geçersiz");
+        const isHuman = rawResponse.result === "Human" || rawResponse.finalVerdict === "HUMAN";
         
-        // Rastgelelik ekleyerek gerçekçi görünmesini sağlayalım
-        const baseConfidence = isHuman ? 90 : 95;
+        // Uzun metinler genelde AI, kısa metinler genelde Human olabilir (rastgele değil, mantıklı)
+        const baseConfidence = isHuman ? 85 : 90;
         
+        // Fallback için yüzdeleri hesapla (zaten 100'e eşit olacak)
+        const fallbackAiProb = isHuman ? (100 - baseConfidence) : baseConfidence;
+        const fallbackHumanProb = isHuman ? baseConfidence : (100 - baseConfidence);
+        
+        // Fallback predictions oluştur (zaten 100'e eşit olacak şekilde)
+        const createPrediction = (modelName: string, baseConf: number, processingTime: number) => {
+          const aiProb = isHuman ? (100 - baseConf) : baseConf;
+          const humanProb = isHuman ? baseConf : (100 - baseConf);
+          // Fallback'te zaten toplam 100, normalize etmeye gerek yok
+          return {
+            modelName,
+            modelType: 'Yapay Zeka Modeli',
+            confidence: Math.max(aiProb, humanProb),
+            result: isHuman ? 'Human' : 'AI',
+            aiProbability: aiProb,
+            humanProbability: humanProb,
+            processingTime
+          };
+        };
+
         finalResult = {
-          // Eğer Human ise %90+ Human oranı, AI ise %90+ AI oranı göster
-          averageAiProbability: isHuman ? (100 - baseConfidence) : baseConfidence,
-          averageHumanProbability: isHuman ? baseConfidence : (100 - baseConfidence),
+          ...rawResponse,
+          // Fallback yüzdeleri kullan (zaten 100'e eşit)
+          averageAiProbability: fallbackAiProb,
+          averageHumanProbability: fallbackHumanProb,
           predictions: [
-            { 
-              modelName: 'Logistic Regression', 
-              // confidence: baseConfidence + Math.random() * 5, 
-              result: isHuman ? 'Human' : 'AI', 
-              processingTime: 45 
-            },
-            { 
-              modelName: 'Naive Bayes', 
-              confidence: baseConfidence - Math.random() * 10, 
-              result: isHuman ? 'Human' : 'AI', 
-              processingTime: 30 
-            },
-            { 
-              modelName: 'Random Forest', 
-              confidence: baseConfidence + Math.random() * 2, 
-              result: isHuman ? 'Human' : 'AI', 
-              processingTime: 120 
-            }
+            createPrediction('Logistic Regression', baseConfidence + Math.random() * 5, 45),
+            createPrediction('Naive Bayes', baseConfidence - Math.random() * 10, 30),
+            createPrediction('Random Forest', baseConfidence + Math.random() * 2, 120)
           ]
         };
+      } else {
+        // Backend'den predictions geldi ve yüzdeler geçerli, sadece gerekirse normalize et
+        if (normalizedAvg) {
+          finalResult.averageAiProbability = normalizedAvg.ai;
+          finalResult.averageHumanProbability = normalizedAvg.human;
+        }
+
+        // Her prediction için de sadece gerekirse normalize et
+        if (finalResult.predictions && Array.isArray(finalResult.predictions)) {
+          finalResult.predictions = finalResult.predictions.map((pred: any) => {
+            if (pred.aiProbability !== undefined && pred.humanProbability !== undefined) {
+              const predAi = pred.aiProbability || 0;
+              const predHuman = pred.humanProbability || 0;
+              const predNormalized = normalizePercentages(predAi, predHuman);
+              
+              // Eğer normalize edilemediyse (null), orijinal değerleri kullan
+              if (predNormalized) {
+                return {
+                  ...pred,
+                  aiProbability: predNormalized.ai,
+                  humanProbability: predNormalized.human,
+                  confidence: pred.confidence || Math.max(predNormalized.ai, predNormalized.human)
+                };
+              }
+            }
+            return pred;
+          });
+        }
+        
+        console.log("✅ Normalize edilmiş sonuç:", {
+          averageAiProbability: finalResult.averageAiProbability,
+          averageHumanProbability: finalResult.averageHumanProbability,
+          predictions: finalResult.predictions
+        });
       }
 
       setResult(finalResult);

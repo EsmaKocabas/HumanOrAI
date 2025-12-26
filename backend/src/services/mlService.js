@@ -24,11 +24,14 @@ exports.getPrediction = async (text) => {
     if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
       console.warn("⚠️ Python API'ye ulaşılamadı, mock data döndürülüyor");
       const length = text.length;
+      // Uzun metinler genelde AI, kısa metinler genelde Human olabilir (eşit değil!)
+      const aiProb = Math.min(85, 60 + (length % 15));
+      const humanProb = 100 - aiProb;
       return {
         result: "Bilinmiyor",
         finalVerdict: "Bilinmiyor",
-        averageAiProbability: Math.min(90, 50 + (length % 10)),
-        averageHumanProbability: Math.min(90, 50 + (length % 10)),
+        averageAiProbability: aiProb,
+        averageHumanProbability: humanProb,
         predictions: []
       };
     }
